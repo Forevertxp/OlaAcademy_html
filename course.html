@@ -1,0 +1,79 @@
+<!--
+	作者：forevertxp@gmail.com
+	时间：2016-07-14
+	描述：课程分享页面
+-->
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<meta content="yes" name="apple-mobile-web-app-capable">
+		<meta content="black" name="apple-mobile-web-app-status-bar-style">
+		<meta content="telephone=no" name="format-detection">
+		<link href="css/mkstyle.css" rel="stylesheet" />
+		<link href="css/amazeui.min.css" rel="stylesheet" />
+	</head>
+
+	<body>
+		<div class="main">
+			<div class="head" style="background-color:black">
+				<video src="" width="100%" height="100%" controls="controls" id="video"></video>
+			</div>
+			<div id="courseListView" width="100%" height="100%" class="content" style="background-color:white">
+			</div>
+			<div data-am-sticky class="bottom">
+				<a href="http://a.app.qq.com/o/simple.jsp?pkgname=com.michen.olaxueyuan"><button style="height: 100%;" class="am-btn am-btn-default  am-btn-block">下载APP</button></a>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/amazeui.min.js"></script>
+	<script type="text/javascript">
+		var video = document.getElementById('video');
+		video.ontimeupdate = function() {
+			var currentTime = Math.floor(video.currentTime);
+			if(currentTime > 300) {
+				video.currentTime = 0;
+				video.pause();
+				alert("请下载骨今中外app查看完整版视频");
+				window.location.href = "http://a.app.qq.com/o/simple.jsp?pkgname=com.michen.olaxueyuan";
+			}
+		}
+		$(document).ready(function() {
+			var LocString = String(window.document.location.href);
+
+			function getQueryStr(str) {
+				var rs = new RegExp("(^|)" + str + "=([^&]*)(&|$)", "gi").exec(LocString),
+					tmp;
+				if(tmp = rs) {
+					return tmp[2];
+				}
+				return "";
+			}
+			// 获取课程列表
+			$.ajax({
+				url: "/ola/cour/getVideoByPoi",
+				data: {
+					pointId: getQueryStr("courseId"),
+				},
+				type: "post",
+				dataType: "json",
+				success: function(json) {
+					document.title = json.result.videoList[0].name;
+					$("#video").attr("src", json.result.videoList[0].address);
+					$("#video").attr("autoplay", true);
+					var html = "<div class='am-scrollable-vertical' style='height: 100%;'><section data-am-widget='accordion' class='am-accordion am-accordion-basic' data-am-accordion='{  }'><dl class='am-accordion-item am-active'>";
+					$.each(json.result.videoList, function(index, value) {
+						html += "<a href='http://a.app.qq.com/o/simple.jsp?pkgname=com.michen.olaxueyuan'><div style='padding-top:5px;'><span style='width:70%;float:left;white-space:nowrap;text-overflow:ellipsis;'>" + value.name + "</span><span style='padding-left:10%;'>" + value.timeSpan + "</span></div></a>";
+					});
+					html += "</div></dd></dl></section></div>";
+					$('#courseListView').html(html);
+					$.AMUI.accordion.init();
+				}
+			});
+		});
+	</script>
+
+</html>

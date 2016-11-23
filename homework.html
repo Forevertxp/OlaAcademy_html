@@ -1,0 +1,191 @@
+<!--
+	作者：forevertxp@gmail.com
+	时间：2016-07-14
+	描述：布置作业选择题目页面
+-->
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+		<script type="text/x-mathjax-config">
+			MathJax.Hub.Config({ messageStyle: "none", tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} });
+		</script>
+
+		<script type="text/javascript" src="js/MathJax.js?config=TeX-AMS_HTML-full"></script>
+
+		<script type="text/javascript" src="js/jquery.min.js"></script>
+
+		<style type='text/css'>
+			.optionLine {
+				border-bottom: 5px solid #f0f0f0;
+				padding: 10px 2px;
+				font-size: 16px;
+				line-height: 30px;
+			}
+			
+			input[type="checkbox"] {
+				-webkit-appearance: none;
+				height: 20px;
+				vertical-align: middle;
+				width: 20px;
+				border-width: 0px;
+			}
+			
+			input[type="checkbox"]:checked {
+				outline: none;
+				background: #fff url(img/icon_selected.png) no-repeat;
+				background-size: contain;
+			}
+			
+			input[type="checkbox"]:not(:checked) {
+				outline: none;
+				background: #fff url(img/icon_unselect.png) no-repeat;
+				background-size: contain;
+			}
+			
+		</style>
+
+		<script type="text/javascript">
+			var LocString = String(window.document.location.href);
+
+			function getQueryStr(str) {
+				var rs = new RegExp("(^|)" + str + "=([^&]*)(&|$)", "gi").exec(LocString),
+					tmp;
+				if(tmp = rs) {
+					return tmp[2];
+				}
+				return "";
+			}
+
+			var objectId = getQueryStr("objectId");
+			var type = getQueryStr("type");
+			
+			var questionList;
+			//选中的题目
+			var chosenSubject;
+
+			function loadQuestion() {
+				if(type == 1) { //考点
+					$.ajax({
+						type: 'POST',
+						url: 'http://api.olaxueyuan.com/ola/cour/getPoiSubList',
+						data: {
+							"pointId": objectId
+						},
+						success: function(data) {
+							var html = "<table style='width: 100%; border: 0px'>";
+							questionList = data.result;
+							$.each(questionList, function(index, value) {
+								if(value != "") {
+									html +="<tr><td align='left'><div>"+ value.question +"</div></td><td align='right'><input type='checkbox' name='checkbox' value='"+ index +"'/></td></tr><tr><td colspan='2'><hr color='#f0f0f0' size='2' width='100%' /></td></tr>";
+								}
+							});
+							html += "</table>"
+							updateMath(html);
+						},
+						dataType: "JSON"
+					});
+				} else if(type == 2) { //模考真题
+					$.ajax({
+						type: 'POST',
+						url: '/ola/exam/getExamSubList',
+						data: {
+							"examId": objectId
+						},
+						success: function(data) {
+							var html = "<table style='width: 100%; border: 0px'>";
+							questionList = data.result;
+							$.each(questionList, function(index, value) {
+								if(value != "") {
+									html +="<tr><td align='left'><div>"+ value.question +"</div></td><td align='right'><input type='checkbox' name='checkbox' value='"+ index +"'/></td></tr><tr><td colspan='2'><hr color='#f0f0f0' size='2' width='100%' /></td></tr>";
+								}
+							});
+							html += "</table>"
+							updateMath(html);
+						},
+						dataType: "JSON"
+					});
+				}
+			}
+
+			function updateMath(html) {
+				var questionDIV = document.getElementById("question");
+				questionDIV.innerHTML = html;
+				MathJax.Hub.Queue(["Typeset", MathJax.Hub, questionDIV]);
+			}
+			
+			$(document).ready(function(){
+				loadQuestion();
+			});
+			
+			//////////// android中调用的方法  //////////////
+			
+            function chooseAll(type){
+                 $("input[type='checkbox']").each(function(){
+                                    if(type==1){
+                                        this.checked = true;
+                                    }else{
+                                        this.checked = false;
+                                    }
+                                });
+            }
+			
+			function clickNext(){
+				chosenSubject = new Array();
+                $('input:checkbox[name="checkbox"]:checked').each(
+					function() {
+						chosenSubject.push(questionList[$(this).val()]);
+					}
+				);
+				var html = "<table style='width: 100%; border: 0px'>";
+				$.each(chosenSubject, function(index, value) {
+					if(value != "") {
+						html +="<tr><td align='left'><div>"+ value.question +"</div></td><td align='right'><img src='img/icon_delete.png' height='20' size='20'  onclick='del("+index+")'/></td></tr><tr><td colspan='2'><hr color='#f0f0f0' size='2' width='100%' /></td></tr>";
+					}
+				});
+				html += "</table>"
+				updateMath(html);
+			}
+			
+			function del(index){
+				var chosenSubject_2 = new Array();
+				$.each(chosenSubject, function(i, value) {
+					if(i!=index){
+						chosenSubject_2.push(value);
+					}
+				});
+				chosenSubject = chosenSubject_2;
+				var html = "<table style='width: 100%; border: 0px'>";
+				$.each(chosenSubject, function(index, value) {
+					if(value != "") {
+						html +="<tr><td align='left'><div>"+ value.question +"</div></td><td align='right'><img src='img/icon_delete.png' height='20' size='20'  onclick='del("+index+")'/></td></tr><tr><td colspan='2'><hr color='#f0f0f0' size='2' width='100%' /></td></tr>";
+					}
+				});
+				html += "</table>"
+				updateMath(html);
+            }
+			
+			function rechoose(){
+				var html = "<table style='width: 100%; border: 0px'>";
+				$.each(questionList, function(index, value) {
+					if(value != "") {
+						html +="<tr><td align='left'><div>"+ value.question +"</div></td><td align='right'><input type='checkbox' name='checkbox' value='"+ index +"'/></td></tr><tr><td colspan='2'><hr color='#f0f0f0' size='2' width='100%' /></td></tr>";
+					}
+				});
+				html += "</table>"
+				updateMath(html);
+			}
+			
+			function deploy(){
+				window.AndroidWebView.deploySubject(JSON.stringify(chosenSubject).toString());
+			}
+			
+		</script>
+	</head>
+
+	<body>
+		<div id='question'></div>
+	</body>
+
+</html>
