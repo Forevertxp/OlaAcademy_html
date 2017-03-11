@@ -15,25 +15,36 @@
 <script type="text/javascript" src="js/jquery.min.js"></script>
 
 <style type='text/css'>
-            .optionLine { border-bottom:5px solid #f0f0f0; padding:10px 2px; font-size:16px; line-height:30px;}
+			ul li {
+				list-style: none;
+				color: #51535E;
+			    position: relative;
+			    padding-top: 5%;
+			    padding-bottom: 5%;
+			    border-bottom: 1px solid #f0f0f0;
+			}
+			.listStyle:before  {
+			    position: absolute;
+			    display: block;
+			    content: attr(data-option);
+			    padding-top: .3em;
+			    text-align: center;
+			    color: #0099FF;
+			    left: -2.5em;
+			    width: 1.8em; 
+			    height: 1.8em; 
+			    background-repeat: no-repeat;
+			    background-size: 1.8em 1.8em;
+			    background-position: 0em 0em;
+				background-image: url('img/ic_circle.png');
+			}
+			.selectListStyle:before  {
+				color: white;
+				background-image: url('img/ic_point.png');
+			}
+			
+            .optionLine { border-bottom:1px solid #f0f0f0; padding-top:10px; color: #51535E; font-size:16px; padding-bottom:10px;}
             .blueContent{color:#0099FF; }
-            input[type="radio"] {
-                -webkit-appearance: none;
-                height: 24px;
-                vertical-align: middle;
-                width: 24px;
-                border-width:0px;
-            }
-            input[type="radio"]:checked {
-            	outline:none;
-                background: #fff url(img/ic_selected.png) no-repeat;
-                background-size:contain;
-            }
-            input[type="radio"]:not(:checked){
-            	outline:none;
-                background: #fff url(img/ic_unselect.png) no-repeat;
-                background-size:contain;
-            }
             .center {
                 text-align:center
             }
@@ -177,63 +188,37 @@
 		questionDIV.innerHTML = data.question;
 		MathJax.Hub.Queue([ "Typeset", MathJax.Hub, questionDIV ]);
 		
-		//选项A
-        var optionDIV1 = document.getElementById('option1');
-        optionDIV1.innerHTML = 'A. '+ data.optionList[0].content;
-        MathJax.Hub.Queue(["Typeset",MathJax.Hub,optionDIV1]);
-        //选项B
-        var optionDIV2 = document.getElementById('option2');
-        optionDIV2.innerHTML = 'B. '+ data.optionList[1].content;
-        MathJax.Hub.Queue(["Typeset",MathJax.Hub,optionDIV2]);
-        //选项C
-        if(data.optionList[2]!=null){
-            document.getElementById('line3').style.display="";
-            document.getElementById('divider3').style.display="";
-            var optionDIV3 = document.getElementById('option3');
-            optionDIV3.innerHTML = 'C. '+ data.optionList[2].content;
-            MathJax.Hub.Queue(["Typeset",MathJax.Hub,optionDIV3]);
-        }else{
-            document.getElementById('line3').style.display="none";
-            document.getElementById('divider3').style.display="none";
-        }
-        
-        //选项D
-        if(data.optionList[3]!=null){
-            document.getElementById('line4').style.display="";
-            document.getElementById('divider4').style.display="";
-            var optionDIV4 = document.getElementById('option4');
-            optionDIV4.innerHTML = 'D. '+ data.optionList[3].content;
-            MathJax.Hub.Queue(["Typeset",MathJax.Hub,optionDIV4]);
-        }else{
-            document.getElementById('line4').style.display="none";
-            document.getElementById('divider4').style.display="none";
-        }
-        
-        //选项E
-        if(data.optionList[4]!=null){
-            document.getElementById('line5').style.display="";
-            document.getElementById('divider5').style.display="";
-            var optionDIV5 = document.getElementById('option5');
-            optionDIV5.innerHTML = 'E. '+ data.optionList[4].content;
-            MathJax.Hub.Queue(["Typeset",MathJax.Hub,optionDIV5]);
-        }else{
-            document.getElementById('line5').style.display="none";
-            document.getElementById('divider5').style.display="none";
-        }
+		var html = "<ul id='ul' style='width: 90%; margin-top: 0px;'>";
+		$.each(data.optionList, function(i, value) {
+			html += "<li class='listStyle' id='"+i+"'>"+ value.content+"</li>";
+		});
+		html+='</ul>';
+		
+		var optionDIV = document.getElementById("option");
+		optionDIV.innerHTML = html;
+		MathJax.Hub.Queue([ "Typeset", MathJax.Hub, optionDIV ]);
+		
+		//行点击事件
+		$("#ul li").click(function(){
+			$(this).toggleClass("selectListStyle");
+			$("#ul li[id!='"+ $(this).attr("id")+"']").removeClass("selectListStyle");
+		});
         
       	//选中
       	var i=0;
-            $("[name='radio']").each(function(){
-            	if(answerArray!=null&&answerArray[currentIndex]!=null){
-              		var obj = answerArray[currentIndex];
-              		if(obj.currentChoice!=null&&i++==obj.currentChoice){
-                        $(this).prop("checked",true);
-                     }else{
-                        $(this).prop("checked",false);
-                     }
-              	}else{
-              		$(this).prop("checked",false);
-              	}                             
+        $("#ul li").each(function(){
+        		if(answerArray!=null&&answerArray[currentIndex]!=null){
+          		var obj = answerArray[currentIndex];
+          		if(obj.currentChoice!=null&&i++==obj.currentChoice){
+                    $(this).toggleClass("selectListStyle");
+                 }else{
+                    $(this).removeClass("selectListStyle");
+                 }
+                 $(this).attr('data-option',String.fromCharCode(i + 64));
+          	}else{
+          		$(this).removeClass("selectListStyle");
+          		$(this).attr('data-option',String.fromCharCode(i++ + 65));
+          	}
 		})
         
       	//图片
@@ -325,7 +310,12 @@
 			window.AndroidWebView.showPreviousButton();
 		}
 		//选中的答案
-		var optionIndex=$('input:radio[name="radio"]:checked').val();
+		var optionIndex=null;
+		$("#ul li").each(function(){
+			if($(this).attr('class') =='listStyle selectListStyle'){
+				optionIndex = $(this).attr("id");
+			}
+		});
 		
 		var answerObj = new Object();
 		answerObj.questionId = questionList[currentIndex].id;
@@ -369,44 +359,7 @@
 
 	<div id='question'></div>
     
-    <table style="width: 100%; border: 0px">
-        <tr>
-            <td align='left'><div id='option1' /></td>
-            <td align='right'><input type='radio' name='radio' value='0'/></td>
-        </tr>
-        <tr>
-            <td colspan='2'><hr color="#f0f0f0" size="5" width="100%" /></td>
-        </tr>
-        <tr>
-            <td align='left'><div id='option2' /></td>
-            <td align='right'><input type='radio' name='radio' value='1'/></td>
-        </tr>
-        <tr>
-            <td colspan='2'><hr color="#f0f0f0" size="5" width="100%" /></td>
-        </tr>
-        <tr id='line3'>
-            <td align='left'><div id='option3' /></td>
-            <td align='right'><input type='radio' name='radio' value='2'/></td>
-        </tr>
-        <tr id='divider3'>
-            <td colspan='2'><hr color="#f0f0f0" size="5" width="100%" /></td>
-        </tr>
-        <tr id='line4'>
-            <td align='left'><div id='option4' /></td>
-            <td align='right'><input type='radio' name='radio' value='3'/></td>
-        </tr>
-        <tr id='divider4'>
-            <td colspan='2'><hr color="#f0f0f0" size="5" width="100%" /></td>
-        </tr>
-        <tr id='line5'>
-            <td align='left'><div id='option5' /></td>
-            <td align='right'><input type='radio' name='radio' value='4'/></td>
-        </tr>
-        <tr id='divider5'>
-            <td colspan='2'><hr color="#f0f0f0" size="5" width="100%" /></td>
-        </tr>
-        
-    </table>
+    <div id='option'></div>
     
     <div class="center">
         <img class="auto_image" id="img"/>
